@@ -8,7 +8,6 @@ from typing import Tuple
 
 import PIL
 import cv2
-import nest_asyncio
 import numpy as np
 from PIL import Image
 from loguru import logger
@@ -16,7 +15,9 @@ from loguru import logger
 from .load import OnnxRuntimeManager, load_labels, singleton
 from .setup import download_csv, download_model
 
-nest_asyncio.apply()
+
+# import nest_asyncio
+# nest_asyncio.apply()
 
 
 def make_square(img, target_size):

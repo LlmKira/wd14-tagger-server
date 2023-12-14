@@ -6,7 +6,6 @@ authors = [
     {name = "sudoskys", email = "coldlando@hotmail.com"},
 ]
 dependencies = [
-    "sanic>=23.6.0",
     "onnxruntime>=1.16.3",
     "pydantic-settings>=2.1.0",
     "loguru>=0.7.2",
@@ -18,6 +17,9 @@ dependencies = [
     "nest-asyncio>=1.5.8",
     "httpx>=0.25.2",
     "robust-downloader>=0.0.2",
+    "fastapi>=0.105.0",
+    "uvicorn>=0.24.0.post1",
+    "python-multipart>=0.0.6",
 ]
 requires-python = ">=3.8"
 readme = "README.md"

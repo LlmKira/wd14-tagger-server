@@ -13,8 +13,8 @@ async def download_file(file_name: str, file_url: str, file_dir: str):
     :return: None
     :raises: DownloadError, FileSizeMismatchError
     """
-    download(url=file_url, folder=file_dir, filename=file_name)
-    logger.success(f"Download file {file_name} from {file_url} success")
+    if download(url=file_url, folder=file_dir, filename=file_name):
+        logger.success(f"Download file {file_name} from {file_url} success")
 
 
 async def download_model(model_name: str, file_dir: str = "models") -> str:

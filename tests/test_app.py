@@ -3,26 +3,26 @@
 # @Author  : sudoskys
 # @File    : test_app.py
 # @Software: PyCharm
-# test_app.py
+
 import pytest
-from sanic_testing.testing import SanicTestClient
+from fastapi.testclient import TestClient
 
 from app import app
 
 
 @pytest.fixture
-def test_cli(loop):
-    return SanicTestClient(app, loop)
+def test_cli():
+    return TestClient(app)
 
 
 @pytest.mark.asyncio
 async def test_upload(test_cli):
     # Replace with your actual file and token
     data = {
-        "file": open("test_src_01.png", "rb"),
+        "file": ("test_src_01.png", open("test_src_01.png", "rb")),
         "token": "your_token",
         "general_threshold": "0.35",
         "character_threshold": "0.85",
     }
-    response = await test_cli.post("/upload", data=data)
-    assert response.status == 200
+    response = test_cli.post("/upload", files=data)
+    assert response.status_code == 200
