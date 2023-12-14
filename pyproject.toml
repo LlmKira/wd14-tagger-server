@@ -1,0 +1,30 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "sudoskys", email = "coldlando@hotmail.com"},
+]
+dependencies = [
+    "sanic>=23.6.0",
+    "onnxruntime>=1.16.3",
+    "pydantic-settings>=2.1.0",
+    "loguru>=0.7.2",
+    "aiohttp>=3.9.1",
+    "rich>=13.7.0",
+    "Pillow>=10.1.0",
+    "opencv-python>=4.8.1.78",
+    "pandas>=2.0.3",
+    "nest-asyncio>=1.5.8",
+    "httpx>=0.25.2",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "*"}
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pre-commit>=3.5.0",
+    "sanic-testing>=23.6.0",
+    "pytest>=7.4.3",
+]
