@@ -17,6 +17,7 @@ dependencies = [
     "pandas>=2.0.3",
     "nest-asyncio>=1.5.8",
     "httpx>=0.25.2",
+    "robust-downloader>=0.0.2",
 ]
 requires-python = ">=3.8"
 readme = "README.md"

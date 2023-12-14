@@ -1,11 +1,7 @@
-import os
 import pathlib
 
-import httpx
 from loguru import logger
-from rich.progress import Progress
-
-from .error import DownloadError, FileSizeMismatchError
+from robust_downloader import download
 
 
 async def download_file(file_name: str, file_url: str, file_dir: str):
@@ -17,55 +13,7 @@ async def download_file(file_name: str, file_url: str, file_dir: str):
     :return: None
     :raises: DownloadError, FileSizeMismatchError
     """
-    file_dir_obj = pathlib.Path(file_dir)
-    file_path = file_dir_obj.joinpath(file_name)
-    if file_path.exists():
-        existing_size = os.path.getsize(file_path)
-        logger.warning(
-            f"File {file_name} already exists with size {existing_size} bytes"
-        )
-    logger.info(
-        f"Start download file {file_name} from {file_url} to {file_path.absolute()}"
-    )
-    async with httpx.AsyncClient() as client:
-        resp = await client.head(file_url)
-        if resp.status_code == 302:
-            file_url = resp.headers["Location"]
-            logger.info(f"Redirected to {file_url}, start download again")
-            resp = await client.get(
-                file_url
-            )  # Make a new GET request to the redirected URL
-        elif resp.status_code != 200:
-            raise DownloadError(
-                f"Download file {file_name} from {file_url} failed, status code: {resp.status_code}"
-            )
-        total_size = int(resp.headers.get("content-length", 0))
-        if file_path.exists():
-            existing_size = os.path.getsize(file_path)
-            if existing_size == total_size:
-                logger.info(f"File {file_name} already downloaded with correct size")
-                return
-            else:
-                logger.warning(
-                    f"File {file_name} already exists with size {existing_size} bytes, re-download"
-                )
-        resp = await client.get(file_url)
-        progress = Progress()
-        task_id = progress.add_task("[cyan]Downloading...", total=total_size)
-        with progress:
-            with open(file_path, "wb") as f:
-                while not progress.finished:
-                    chunk = await resp.content.read(1024)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    progress.update(task_id, advance=len(chunk))
-
-    downloaded_size = os.path.getsize(file_path)
-    if downloaded_size != total_size:
-        raise FileSizeMismatchError(
-            f"Expected {total_size} bytes, but got {downloaded_size} bytes"
-        )
+    download(url=file_url, folder=file_dir, filename=file_name)
     logger.success(f"Download file {file_name} from {file_url} success")
 
 

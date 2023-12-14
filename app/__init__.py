@@ -12,9 +12,9 @@ from sanic.exceptions import Unauthorized, ServerError
 from sanic.request import Request
 from sanic.response import HTTPResponse
 
-from .settings import InferSettingCurrent
 from .infer import InferClient
 from .infer.error import LoadError, FileSizeMismatchError, DownloadError
+from .settings import InferSettingCurrent
 
 app = Sanic(__name__)
 

@@ -7,4 +7,4 @@
 
 import app
 
-app.app.run(host="127.0.0.1", port=8000, debug=True)
+app.app.run(host="127.0.0.1", port=8888, debug=True, workers=1)
