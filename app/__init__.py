@@ -20,6 +20,7 @@ def verify_token(token):
 INFER_APP = InferClient(
     model_name=InferSettingCurrent.wd_model_name,
     model_dir=InferSettingCurrent.wd_model_dir,
+    skip_auto_download=InferSettingCurrent.skip_auto_download,
 )
 logger.info(f"Infer app init success, model_path: {INFER_APP.model_path}")
 

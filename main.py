@@ -3,12 +3,13 @@
 # @Author  : sudoskys
 # @File    : main.py
 # @Software: PyCharm
-import os
 import sys
 
 import uvicorn
 from dotenv import load_dotenv
 from loguru import logger
+from pydantic import model_validator
+from pydantic_settings import BaseSettings
 
 import app
 
@@ -22,16 +23,25 @@ logger.add(
     rotation="100 MB",
     enqueue=True,
 )
-server_port = os.getenv("PORT", 8889)
-server_host = os.getenv("HOST", "127.0.0.1")
-logger.info(f"Running on {server_host}:{server_port}")
-if server_host.startswith("https://"):
-    server_host = server_host.replace("https://", "")
-    logger.warning("Wrong HOST, should remove the prefix https://")
-if server_host.startswith("http://"):
-    server_host = server_host.replace("http://", "")
-    logger.warning("Wrong HOST, should remove the prefix http://")
-assert isinstance(server_host, str)
-assert isinstance(server_port, int)
-logger.info(f"Docs: http://{server_host}:{server_port}/docs")
-uvicorn.run(app.app, host=server_host, port=server_port)
+
+
+class ServerSetting(BaseSettings):
+    server_port: int = 10010
+    server_host: str = "127.0.0.1"
+
+    @model_validator(mode="after")
+    def check(self):
+        if self.server_host.startswith("https://"):
+            self.server_host = self.server_host.replace("https://", "")
+            logger.warning("Wrong HOST, should remove the prefix https://")
+        if self.server_host.startswith("http://"):
+            self.server_host = self.server_host.replace("http://", "")
+            logger.warning("Wrong HOST, should remove the prefix http://")
+        assert isinstance(self.server_host, str)
+        assert isinstance(self.server_port, int)
+        return self
+
+
+setting = ServerSetting()
+logger.info(f"Docs: http://{setting.server_host}:{setting.server_port}/docs")
+uvicorn.run(app.app, host=setting.server_host, port=setting.server_port)

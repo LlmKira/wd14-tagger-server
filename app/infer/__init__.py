@@ -4,6 +4,7 @@
 # @File    : __init__.py.py
 # @Software: PyCharm
 import asyncio
+import pathlib
 from typing import Tuple
 
 import PIL
@@ -127,7 +128,12 @@ async def infer_tag(
 
 @singleton
 class InferClient(object):
-    def __init__(self, model_name: str, model_dir: str = "models"):
+    def __init__(
+        self,
+        model_name: str,
+        model_dir: str = "models",
+        skip_auto_download: bool = False,
+    ):
         self.model_path = None
         self.tag_csv_path = None
 
@@ -136,20 +142,38 @@ class InferClient(object):
         self.general_indexes = None
         self.character_indexes = None
 
-        self.set_up(model_name=model_name, model_dir=model_dir)
+        self.set_up(
+            model_name=model_name,
+            model_dir=model_dir,
+            skip_auto_download=skip_auto_download,
+        )
 
-    def set_up(self, model_name: str, model_dir: str):
+    def set_up(self, model_name: str, model_dir: str, skip_auto_download: bool = False):
         # Download model and csv
         def sync(coro):
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(coro)
 
         logger.info("Setting up inference client...")
-
-        model_path = sync(download_model(model_name, file_dir=model_dir))
-        tag_csv_path = sync(download_csv(model_name, file_dir=model_dir))
-        self.model_path = model_path
-        self.tag_csv_path = tag_csv_path
+        if skip_auto_download:
+            logger.warning("Skipping auto download")
+            model_path = (
+                pathlib.Path(model_dir).joinpath(f"{model_name}.onnx").absolute()
+            )
+            tag_csv_path = (
+                pathlib.Path(model_dir).joinpath(f"{model_name}.csv").absolute()
+            )
+            if not model_path.exists():
+                raise FileNotFoundError(f"Model {model_name} not exists")
+            if not tag_csv_path.exists():
+                raise FileNotFoundError(f"Tagger CSV {model_name} not exists")
+            self.model_path = str(model_path)
+            self.tag_csv_path = str(tag_csv_path)
+        else:
+            model_path = sync(download_model(model_name, file_dir=model_dir))
+            tag_csv_path = sync(download_csv(model_name, file_dir=model_dir))
+            self.model_path = model_path
+            self.tag_csv_path = tag_csv_path
 
         # Load labels
         tag_names, rating_indexes, general_indexes, character_indexes = load_labels(
