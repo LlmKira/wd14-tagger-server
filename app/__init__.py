@@ -26,7 +26,7 @@ logger.info(f"Infer app init success, model_path: {INFER_APP.model_path}")
 
 @app.post("/upload")
 async def upload(
-    token: str,
+    token: Optional[str] = None,
     file: UploadFile = File(...),
     general_threshold: Optional[float] = 0.35,
     character_threshold: Optional[float] = 0.85,

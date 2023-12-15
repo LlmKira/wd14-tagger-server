@@ -5,11 +5,14 @@
 # @Software: PyCharm
 import pathlib
 
+from dotenv import load_dotenv
 from loguru import logger
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
 from .values import all_wd_models
+
+load_dotenv()
 
 
 class InferSetting(BaseSettings):
