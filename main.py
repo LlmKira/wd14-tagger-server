@@ -31,5 +31,6 @@ if server_host.startswith("https://"):
 if server_host.startswith("http://"):
     server_host = server_host.replace("http://", "")
     logger.warning("Wrong HOST, should remove the prefix http://")
-
+assert isinstance(server_host, str)
+assert isinstance(server_port, int)
 uvicorn.run(app.app, host=server_host, port=server_port)

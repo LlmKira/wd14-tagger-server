@@ -14,7 +14,7 @@ async def download_file(file_name: str, file_url: str, file_dir: str):
     :return: None
     :raises: DownloadError, FileSizeMismatchError
     """
-    if download(url=file_url, folder=file_dir, filename=file_name, timeout=20):
+    if download(url=file_url, folder=file_dir, filename=file_name):
         logger.success(f"Download file {file_name} from {file_url} success")
 
 
