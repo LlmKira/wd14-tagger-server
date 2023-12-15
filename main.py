@@ -33,4 +33,5 @@ if server_host.startswith("http://"):
     logger.warning("Wrong HOST, should remove the prefix http://")
 assert isinstance(server_host, str)
 assert isinstance(server_port, int)
+logger.info(f"Docs: http://{server_host}:{server_port}/docs")
 uvicorn.run(app.app, host=server_host, port=server_port)
