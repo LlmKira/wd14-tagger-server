@@ -144,6 +144,8 @@ class InferClient(object):
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(coro)
 
+        logger.info("Setting up inference client...")
+
         model_path = sync(download_model(model_name, file_dir=model_dir))
         tag_csv_path = sync(download_csv(model_name, file_dir=model_dir))
         self.model_path = model_path
