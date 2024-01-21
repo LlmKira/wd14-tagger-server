@@ -7,8 +7,8 @@ import pathlib
 
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import ConfigDict, model_validator
-from pydantic_settings import BaseSettings
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .values import all_wd_models
 
@@ -20,7 +20,9 @@ class InferSetting(BaseSettings):
     wd_model_dir: str = "models"
     skip_auto_download: bool = False
 
-    model_config = ConfigDict()
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     @model_validator(mode="after")
     def check_setting(self):
