@@ -1,8 +1,11 @@
-# wd14-tagger-server
+# 🥽 wd14-tagger-server
 
-wd14-tagger 的后端服务实现。工业级应用，使用 FastAPI 框架，使用 PM2 托管。
+This is the backend service implementation of wd14-tagger. It's an industrial-grade application, deployed with FastAPI
+framework and hosted with PM2.
 
-## Config
+## 🔧 Config
+
+Use the following commands to copy and edit the environment configuration file:
 
 ```shell
 cp .env.exp .env
@@ -10,9 +13,9 @@ nano .env
 
 ```
 
-## Run
+## 🚀 Run
 
-在终端中运行
+Here's how to run the server in your terminal:
 
 ```shell
 pip install pdm
@@ -21,9 +24,9 @@ pdm run python main.py
 
 ```
 
-## PM2
+## PM2 🔄
 
-启动 pm2 托管，自动重启
+These instructions help you start PM2 hosting and set it to automatically restart:
 
 ```shell
 apt install npm
@@ -36,11 +39,11 @@ pm2 restart pm2.json
 
 ```
 
-## Docs
+## 📚 Docs
 
-访问 `/docs` 页面查看接口文档并调试
+To view interface documentation and debug, visit the `/docs` page.
 
-## Acknowledgement
+## Acknowledgement 🏅
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [huggingface:SmilingWolf/wd-v1-4-tags](https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags/blob/main/app.py)
