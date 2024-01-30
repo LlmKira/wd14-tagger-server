@@ -24,6 +24,13 @@ pdm run python main.py
 
 ```
 
+To run in Docker:
+
+```shell
+docker build --rm -t wd14taggerserver:latest "."
+docker run -d -p 5010:5010 wd14taggerserver:latest
+```
+
 ## PM2 🔄
 
 These instructions help you start PM2 hosting and set it to automatically restart:
