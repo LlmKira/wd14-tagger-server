@@ -1,6 +1,7 @@
 # 🥽 wd-tagger-server
 
-This is the backend service implementation of [wd-tagger](https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags). It's an industrial-grade application, deployed with FastAPI
+This is the backend service implementation of [wd-tagger](https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags). It's
+an industrial-grade application, deployed with FastAPI
 framework and hosted with PM2.
 
 ## Quick View
@@ -12,6 +13,8 @@ curl -X 'POST' \
   -H 'Content-Type: multipart/form-data' \
   -F 'file=@the_image_for_upload.png;type=image/png'
 ```
+
+**All Model You Can Use Here**: [app/values.py](https://github.com/LlmKira/wd14-tagger-server/blob/main/app/values.py)
 
 ## 🔧 Config
 
