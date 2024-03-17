@@ -38,8 +38,7 @@ async def upload(
     try:
         image: Image = Image.open(BytesIO(await file.read()))
         (
-            tag_result,
-            origin_result,
+            sorted_general_strings,
             rating,
             character_res,
             general_res,
@@ -48,9 +47,12 @@ async def upload(
             general_threshold=general_threshold,
             character_threshold=character_threshold,
         )
+        logger.warning(
+            "tag_result has been deprecated, use sorted_general_strings instead"
+        )
         return {
-            "tag_result": tag_result,
-            "origin_result": origin_result,
+            "tag_result": sorted_general_strings,
+            "sorted_general_strings": sorted_general_strings,
             "rating": rating,
             "character_res": character_res,
             "general_res": general_res,

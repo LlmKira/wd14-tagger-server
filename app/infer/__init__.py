@@ -1,129 +1,120 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/12/14 下午7:44
 # @Author  : sudoskys
-# @File    : __init__.py.py
-# @Software: PyCharm
+# @File    : __init__.py
+
 import asyncio
 import pathlib
-from typing import Tuple
-
-import PIL
-import cv2
 import numpy as np
 from PIL import Image
 from loguru import logger
 
-from .load import OnnxRuntimeManager, load_labels, singleton
+from .load import OnnxRuntimeManager, load_labels, singleton, mcut_threshold
 from .setup import download_csv, download_model
 
 
 # import nest_asyncio
 # nest_asyncio.apply()
+class Predictor(object):
+    def __init__(
+        self,
+        model,
+        model_target_size,
+        tag_names,
+        rating_indexes,
+        general_indexes,
+        character_indexes,
+    ):
+        self.model = model
+        self.model_target_size = model_target_size
+        self.tag_names = tag_names
+        self.rating_indexes = rating_indexes
+        self.general_indexes = general_indexes
+        self.character_indexes = character_indexes
 
+    def prepare_image(self, image):
+        target_size = self.model_target_size
 
-def make_square(img, target_size):
-    old_size = img.shape[:2]
-    desired_size = max(old_size)
-    desired_size = max(desired_size, target_size)
+        canvas = Image.new("RGBA", image.size, (255, 255, 255))
+        canvas.alpha_composite(image)
+        image = canvas.convert("RGB")
 
-    delta_w = desired_size - old_size[1]
-    delta_h = desired_size - old_size[0]
-    top, bottom = delta_h // 2, delta_h - (delta_h // 2)
-    left, right = delta_w // 2, delta_w - (delta_w // 2)
+        # Pad image to square
+        image_shape = image.size
+        max_dim = max(image_shape)
+        pad_left = (max_dim - image_shape[0]) // 2
+        pad_top = (max_dim - image_shape[1]) // 2
 
-    color = [255, 255, 255]
-    new_im = cv2.copyMakeBorder(
-        img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
-    )
-    return new_im
+        padded_image = Image.new("RGB", (max_dim, max_dim), (255, 255, 255))
+        padded_image.paste(image, (pad_left, pad_top))
 
+        # Resize
+        if max_dim != target_size:
+            padded_image = padded_image.resize(
+                (target_size, target_size),
+                Image.BICUBIC,
+            )
 
-def smart_resize(img, size):
-    # Assumes the image has already gone through make_square
-    if img.shape[0] > size:
-        img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
-    elif img.shape[0] < size:
-        img = cv2.resize(img, (size, size), interpolation=cv2.INTER_CUBIC)
-    return img
+        # Convert to numpy array
+        image_array = np.asarray(padded_image, dtype=np.float32)
 
+        # Convert PIL-native RGB to BGR
+        image_array = image_array[:, :, ::-1]
 
-async def infer_tag(
-    image: Image.Image,
-    model_path: str,
-    tag_names: list[str],
-    rating_indexes: list[np.int64],
-    general_indexes: list[np.int64],
-    character_indexes: list[np.int64],
-    general_threshold: float = 0.35,
-    character_threshold: float = 0.85,
-) -> Tuple:
-    """
-    Tag Picture
-    :param image: 图片
+        return np.expand_dims(image_array, axis=0)
 
-    :param model_path: 模型路径
+    def predict(
+        self,
+        image: Image.Image,
+        general_thresh: float,
+        general_mcut_enabled: bool,
+        character_thresh: float,
+        character_mcut_enabled: bool,
+    ):
+        image = self.prepare_image(image)
 
-    :param general_threshold: 一般标签阈值
-    :param character_threshold: 人物标签阈值
+        input_name = self.model.get_inputs()[0].name
+        label_name = self.model.get_outputs()[0].name
+        preds = self.model.run([label_name], {input_name: image})[0]
 
-    :param tag_names: 标签名
-    :param rating_indexes: 评级索引
-    :param general_indexes: 一般标签索引
-    :param character_indexes: 人物标签索引
+        labels = list(zip(self.tag_names, preds[0].astype(float)))
 
-    :return: (Processed, Original, Rating, Characters, General)
-    :raises: LoadError
-    """
-    model = OnnxRuntimeManager.get_runtime(model_path=model_path)
-    _, height, width, _ = model.get_inputs()[0].shape
+        # First 4 labels are actually ratings: pick one with argmax
+        ratings_names = [labels[i] for i in self.rating_indexes]
+        rating = dict(ratings_names)
 
-    # Alpha to white
-    image = image.convert("RGBA")
-    new_image = PIL.Image.new("RGBA", image.size, "WHITE")
-    new_image.paste(image, mask=image)
-    image = new_image.convert("RGB")
-    image = np.asarray(image)
+        # Then we have general tags: pick anywhere prediction confidence > threshold
+        general_names = [labels[i] for i in self.general_indexes]
 
-    # PIL RGB to OpenCV BGR
-    image = image[:, :, ::-1]
+        if general_mcut_enabled:
+            general_probs = np.array([x[1] for x in general_names])
+            general_thresh = mcut_threshold(general_probs)
 
-    image = make_square(image, height)
-    image = smart_resize(image, height)
-    image = image.astype(np.float32)
-    image = np.expand_dims(image, 0)
+        general_res = [x for x in general_names if x[1] > general_thresh]
+        general_res = dict(general_res)
 
-    input_name = model.get_inputs()[0].name
-    label_name = model.get_outputs()[0].name
-    probs = model.run([label_name], {input_name: image})[0]
+        # Everything else is characters: pick anywhere prediction confidence > threshold
+        character_names = [labels[i] for i in self.character_indexes]
 
-    labels = list(zip(tag_names, probs[0].astype(float)))
+        if character_mcut_enabled:
+            character_probs = np.array([x[1] for x in character_names])
+            character_thresh = mcut_threshold(character_probs)
+            character_thresh = max(0.15, character_thresh)
 
-    # First 4 labels are actually ratings: pick one with argmax
-    ratings_names = [labels[i] for i in rating_indexes]
-    rating = dict(ratings_names)
+        character_res = [x for x in character_names if x[1] > character_thresh]
+        character_res = dict(character_res)
 
-    # Then we have general tags: pick anywhere prediction confidence > threshold
-    general_names = [labels[i] for i in general_indexes]
-    general_res = [x for x in general_names if x[1] > general_threshold]
-    general_res = dict(general_res)
+        sorted_general_strings = sorted(
+            general_res.items(),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        sorted_general_strings = [x[0] for x in sorted_general_strings]
+        sorted_general_strings = (
+            ", ".join(sorted_general_strings).replace("(", "\(").replace(")", "\)")
+        )
 
-    # Everything else is characters: pick anywhere prediction confidence > threshold
-    character_names = [labels[i] for i in character_indexes]
-    character_res = [x for x in character_names if x[1] > character_threshold]
-    character_res = dict(character_res)
-
-    bon_tags = dict(sorted(general_res.items(), key=lambda item: item[1], reverse=True))
-    tag_result = (
-        ", ".join(list(bon_tags.keys()))
-        .replace("_", " ")
-        .replace("(", r"\(")
-        .replace(")", r"\)")
-    )  # Processed
-    origin_result = ", ".join(list(bon_tags.keys()))  # Original
-
-    logger.info(f"Tagged {image.size} image with {len(bon_tags)} tags")
-    logger.debug(f"Tags: {tag_result}")
-    return tag_result, origin_result, rating, character_res, general_res
+        return sorted_general_strings, rating, character_res, general_res
 
 
 @singleton
@@ -190,15 +181,24 @@ class InferClient(object):
         image: Image.Image,
         general_threshold: float = 0.35,
         character_threshold: float = 0.85,
-    ):
+        character_mcut_enabled: bool = True,
+        general_mcut_enabled: bool = True,
+    ) -> tuple:
+        model = OnnxRuntimeManager.get_runtime(model_path=self.model_path)
+        _, model_target_size, width, _ = model.get_inputs()[0].shape
         # Infer tag
-        return await infer_tag(
-            image=image,
-            model_path=self.model_path,
-            general_threshold=general_threshold,
-            character_threshold=character_threshold,
+        predictor = Predictor(
+            model=model,
+            model_target_size=model_target_size,
             tag_names=self.tag_names,
             rating_indexes=self.rating_indexes,
             general_indexes=self.general_indexes,
             character_indexes=self.character_indexes,
+        )
+        return predictor.predict(
+            image=image,
+            general_thresh=general_threshold,
+            general_mcut_enabled=general_mcut_enabled,
+            character_thresh=character_threshold,
+            character_mcut_enabled=character_mcut_enabled,
         )

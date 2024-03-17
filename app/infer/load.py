@@ -28,6 +28,28 @@ def singleton(cls):
 def load_labels(
     label_csv_path: str,
 ) -> Tuple:
+    # https://github.com/toriato/stable-diffusion-webui-wd14-tagger/blob/a9eacb1eff904552d3012babfa28b57e1d3e295c/tagger/ui.py#L368
+    kaomojis = [
+        "0_0",
+        "(o)_(o)",
+        "+_+",
+        "+_-",
+        "._.",
+        "<o>_<o>",
+        "<|>_<|>",
+        "=_=",
+        ">_<",
+        "3_3",
+        "6_9",
+        ">_o",
+        "@_@",
+        "^_^",
+        "o_o",
+        "u_u",
+        "x_x",
+        "|_|",
+        "||_||",
+    ]
     """
     Load labels from csv
     :param label_csv_path: csv path
@@ -42,11 +64,29 @@ def load_labels(
     if not os.path.isfile(label_csv_path):
         raise LoadError("label csv path must be a file")
     df = pd.read_csv(label_csv_path)
-    tag_names = df["name"].tolist()
+    name_series = df["name"]
+    name_series = name_series.map(
+        lambda x: x.replace("_", " ") if x not in kaomojis else x
+    )
+    tag_names = name_series.tolist()
     rating_indexes = list(np.where(df["category"] == 9)[0])
     general_indexes = list(np.where(df["category"] == 0)[0])
     character_indexes = list(np.where(df["category"] == 4)[0])
     return tag_names, rating_indexes, general_indexes, character_indexes
+
+
+def mcut_threshold(probs):
+    """
+    Maximum Cut Thresholding (MCut)
+    Largeron, C., Moulin, C., & Gery, M. (2012). MCut: A Thresholding Strategy
+     for Multi-label Classification. In 11th International Symposium, IDA 2012
+     (pp. 172-183).
+    """
+    sorted_probs = probs[probs.argsort()[::-1]]
+    difs = sorted_probs[:-1] - sorted_probs[1:]
+    t = difs.argmax()
+    thresh = (sorted_probs[t] + sorted_probs[t + 1]) / 2
+    return thresh
 
 
 class RuntimeManager(object):
