@@ -35,6 +35,9 @@ class Predictor(object):
     def prepare_image(self, image):
         target_size = self.model_target_size
 
+        # Convert to RGBA
+        image = image.convert("RGBA")
+
         canvas = Image.new("RGBA", image.size, (255, 255, 255))
         canvas.alpha_composite(image)
         image = canvas.convert("RGB")
