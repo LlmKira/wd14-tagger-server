@@ -16,7 +16,7 @@ load_dotenv()
 
 
 class InferSetting(BaseSettings):
-    wd_model_name: str = "wd-v1-4-moat-tagger-v2"
+    wd_model_name: str = "wd-swinv2-tagger-v3"
     wd_model_dir: str = "models"
     skip_auto_download: bool = False
 

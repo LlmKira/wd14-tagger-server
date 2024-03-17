@@ -10,4 +10,7 @@ all_wd_models = (
     "wd-v1-4-convnext-tagger",
     "wd-v1-4-convnextv2-tagger-v2",
     "wd-v1-4-vit-tagger-v2",
+    "wd-swinv2-tagger-v3",
+    "wd-convnext-tagger-v3",
+    "wd-vit-tagger-v3",
 )
