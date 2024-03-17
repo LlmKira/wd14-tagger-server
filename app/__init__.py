@@ -31,6 +31,8 @@ async def upload(
     file: UploadFile = File(...),
     general_threshold: Optional[float] = 0.35,
     character_threshold: Optional[float] = 0.85,
+    general_mcut_enabled: Optional[bool] = False,
+    character_mcut_enabled: Optional[bool] = False,
 ):
     if not verify_token(token):
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -46,6 +48,8 @@ async def upload(
             image=image,
             general_threshold=general_threshold,
             character_threshold=character_threshold,
+            general_mcut_enabled=general_mcut_enabled,
+            character_mcut_enabled=character_mcut_enabled,
         )
         logger.warning(
             "tag_result has been deprecated, use sorted_general_strings instead"
