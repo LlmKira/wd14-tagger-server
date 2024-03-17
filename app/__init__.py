@@ -62,16 +62,16 @@ async def upload(
             "general_res": general_res,
         }
     except LoadError as e:
-        logger.error(e)
+        logger.exception(e)
         raise HTTPException(status_code=500, detail=str(e))
     except DownloadError as e:
         # 下载模型文件失败
-        logger.error(e)
+        logger.exception(e)
         raise HTTPException(status_code=500, detail=f"Model download failed: {str(e)}")
     except FileSizeMismatchError as e:
         # 下载的模型文件大小不匹配
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="服务器内部错误...")
