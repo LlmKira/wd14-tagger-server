@@ -106,6 +106,8 @@ To view interface documentation and debug, visit the `/docs` page.
 }
 ```
 
+Python [sdk.py](https://github.com/LlmKira/wd14-tagger-server/blob/main/sdk.py)
+
 ## Acknowledgement 🏅
 
 - [FastAPI](https://fastapi.tiangolo.com/)
