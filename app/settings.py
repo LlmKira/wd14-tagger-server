@@ -39,6 +39,7 @@ class InferSetting(BaseSettings):
             logger.success(f"model_dir {model_dir_obj.absolute()} created")
         if not model_dir_obj.is_dir():
             raise ValueError(f"model_dir {self.wd_model_dir} is not a dir")
+        return self
 
     @property
     def model_path(self):
